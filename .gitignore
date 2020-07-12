@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-shinyapps.R
 HigaihouMap.Rproj
+shinyapps.R
 rsconnect
+RESAS_API

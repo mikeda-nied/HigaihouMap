@@ -5,8 +5,10 @@ library(sf)
 library(jpndistrict)
 
 city_union<-function(x) {
+  try(function(x){
+    x <- x %>% sf::st_make_valid()
+  },silent=T)
   x %>% 
-    # sf::st_make_valid() %>%
     sf::st_cast("MULTIPOLYGON") %>% 
     sf::st_union(by_feature = FALSE) %>% 
     sf::st_transform(crs = 4326) %>% 
@@ -20,7 +22,7 @@ jpn_cities2<-function(jis_code, admin_name=NULL){
   jis_code<-as.character(jis_code)
   if(is.null(admin_name)){cities<-jpn_cities(jis_code)
   }else{cities<-jpn_cities(jis_code,admin_name)}
-  api<-'https://opendata.resas-portal.go.jp/api/v1/cities'
+  api<-readLines('./RESAS_API')
   api.key<-'smHq5kzLohJ2FS75AI4ga5qeS8S0E0RG6eE3yqfK'
   json<-fromJSON(getURL(api,httpheader=paste('X-API-KEY:',api.key)))$result
   bc<-filter(json,bigCityFlag==2)
