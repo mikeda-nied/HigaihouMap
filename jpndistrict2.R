@@ -6,7 +6,7 @@ library(jpndistrict)
 
 city_union<-function(x) {
   x %>% 
-    # lwgeom_make_valid() %>% 
+    # sf::st_make_valid() %>%
     sf::st_cast("MULTIPOLYGON") %>% 
     sf::st_union(by_feature = FALSE) %>% 
     sf::st_transform(crs = 4326) %>% 
