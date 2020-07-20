@@ -1,16 +1,9 @@
-library(shiny)
-library(shinyjs)
-library(shinydashboard)
-library(shinyWidgets)
-library(dplyr)
-library(jsonlite)
-library(jpndistrict)
-library(DT)
-library(sf)
-library(geojsonsf)
-library(leaflet)
-library(mapview)
-source('jpndistrict2.R')
+targetPackages <- c('shiny', 'shinyjs', 'shinyWidgets', 'shinydashboard',
+                    'dplyr', 'jsonlite', 'DT', 'sf', 'leaflet', 'geojsonsf') 
+newPackages <- targetPackages[!(targetPackages %in% installed.packages()[,"Package"])]
+if(length(newPackages)) install.packages(newPackages, repos = "https://cran.ism.ac.jp/")
+for(package in targetPackages) library(package, character.only = T)
+source('./jpndistrict2.R')
 
 # 設定
 appURL <- 'https://script.google.com/macros/s/AKfycbw_IoRJvy3nLLKkgzgcsVQ9nsCFAT23lLVuIQtRw1xaV1Fzc4A/exec'

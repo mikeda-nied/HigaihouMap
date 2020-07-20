@@ -1,7 +1,8 @@
-library(dplyr)
-library(RCurl)
-library(jsonlite)
-library(sf)
+targetPackages <- c('dplyr', 'RCurl', 'jsonlite', 'sf', 'devtools') 
+newPackages <- targetPackages[!(targetPackages %in% installed.packages()[,"Package"])]
+if(length(newPackages)) install.packages(newPackages, repos = "https://cran.ism.ac.jp/")
+for(package in targetPackages) library(package, character.only = T)
+if(!"jpndistrict" %in% installed.packages()[,"Package"]) devtools::install_github("uribo/jpndistrict")
 library(jpndistrict)
 
 city_union<-function(x) {
@@ -19,18 +20,28 @@ city_union<-function(x) {
 }
 
 jpn_cities2<-function(jis_code, admin_name=NULL){
-  jis_code<-as.character(jis_code)
-  if(is.null(admin_name)){cities<-jpn_cities(jis_code)
-  }else{cities<-jpn_cities(jis_code,admin_name)}
-  api<-readLines('./RESAS_API')
-  api.key<-'smHq5kzLohJ2FS75AI4ga5qeS8S0E0RG6eE3yqfK'
+  cd<-as.character(jis_code)
+  cd[cd=="40231"]<-"40305" #2018.10.01の市町村変更に対応
+  if(is.null(admin_name)){cities<-jpn_cities(cd)
+  }else{cities<-jpn_cities(cd,admin_name)}
+  cities<-as.data.frame(cities)
+  if("40231"%in%jis_code){
+    cities[cities$city_code=="40305",]$city_code<-"40231" #2018.10.01の市町村変更に対応
+    cities[cities$city_code=="40231",]$city<-"那珂川市"   #2018.10.01の市町村変更に対応
+  }
+  if("28221"%in%jis_code){
+    cities[cities$city_code=="28221",]$city<-"丹波篠山市" #2019.05.01の市町村変更に対応
+  }
+  cities<-cities%>%as_tibble()%>%sf::st_as_sf()
+  api<-"https://opendata.resas-portal.go.jp/api/v1/cities"
+  api.key<-readLines("./RESAS_API")
   json<-fromJSON(getURL(api,httpheader=paste('X-API-KEY:',api.key)))$result
   bc<-filter(json,bigCityFlag==2)
-  if(2%in%lapply(jis_code,nchar)){
-    jis_code<-lapply(jis_code,substr,1,2)%>%unlist()
-    codes<-lapply(jis_code,function(c)grep(sprintf('^%s.*',c),bc$cityCode,value=T))%>%unlist()
+  if(2%in%lapply(cd,nchar)){
+    cd<-lapply(cd,substr,1,2)%>%unlist()
+    codes<-lapply(cd,function(c)grep(sprintf('^%s.*',c),bc$cityCode,value=T))%>%unlist()
   }else{
-    codes<-intersect(jis_code,bc$cityCode)
+    codes<-intersect(cd,bc$cityCode)
   }
   if(length(codes)>0){
     bc<-filter(json,bigCityFlag==1)
